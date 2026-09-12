@@ -1,3 +1,6 @@
+import { index_gen_exports } from "./node_modules/.pnpm/@scaleway_sdk-container@2.12.0_@scaleway_sdk-client@2.6.0/node_modules/@scaleway/sdk-container/dist/v1/index.gen.mjs";
+import "./node_modules/.pnpm/@scaleway_sdk-container@2.12.0_@scaleway_sdk-client@2.6.0/node_modules/@scaleway/sdk-container/dist/index.gen.mjs";
+
 //#region src/constants.ts
 const ENV = {
 	TYPE: "INPUT_TYPE",
@@ -18,7 +21,11 @@ const ENV = {
 	SANDBOX: "INPUT_SCW_SANDBOX",
 	ROOT_ZONE: "INPUT_ROOT_ZONE",
 	ENVIRONMENT_VARIABLES: "INPUT_SCW_ENVIRONMENT_VARIABLES",
-	SECRETS: "INPUT_SCW_SECRETS"
+	SECRETS: "INPUT_SCW_SECRETS",
+	CLEANUP_MAX_AGE_DAYS: "INPUT_CLEANUP_MAX_AGE_DAYS",
+	CLEANUP_DATE_FIELD: "INPUT_CLEANUP_DATE_FIELD",
+	CLEANUP_EXCLUDE_NAMES: "INPUT_CLEANUP_EXCLUDE_NAMES",
+	CLEANUP_DRY_RUN: "INPUT_CLEANUP_DRY_RUN"
 };
 const DEFAULTS = {
 	DESCRIPTION: "this container was created automatically by a github-action",
@@ -31,7 +38,19 @@ const DEFAULTS = {
 	SANDBOX: "v1",
 	TIMEOUT_SECONDS: 60,
 	REGION: "fr-par",
-	TYPE: "deploy"
+	TYPE: "deploy",
+	CLEANUP_MAX_AGE_DAYS: 0,
+	CLEANUP_DATE_FIELD: "updated_at",
+	CLEANUP_DRY_RUN: false
+};
+const TYPES = {
+	DEPLOY: "deploy",
+	TEARDOWN: "teardown",
+	CLEANUP: "cleanup"
+};
+const CLEANUP_DATE_FIELDS = {
+	CREATED_AT: "created_at",
+	UPDATED_AT: "updated_at"
 };
 const DNS = {
 	CNAME: "CNAME",
@@ -40,6 +59,7 @@ const DNS = {
 	WAIT_TIMEOUT: 9e5,
 	RETRY_INTERVAL: 5e3
 };
+const CONTAINER_NAME_MAX_LENGTH = index_gen_exports.ValidationRules.CreateContainerRequest.name.maxLength;
 
 //#endregion
-export { DEFAULTS, DNS, ENV };
+export { CLEANUP_DATE_FIELDS, CONTAINER_NAME_MAX_LENGTH, DEFAULTS, DNS, ENV, TYPES };

@@ -1,9 +1,9 @@
 import * as core from '@actions/core'
 import { createClient } from '@scaleway/sdk-client'
-import { ENV, DEFAULTS } from './constants'
+import { ENV, DEFAULTS, TYPES } from './constants'
 import { getContainerDomain } from './container'
-import { deploy, teardown } from './orchestrator'
-import { envOr, printOutputs } from './utils'
+import { deploy, teardown, cleanup } from './orchestrator'
+import { envOr, hostnameToUrl, printOutputs } from './utils'
 
 function createClientWrapper() {
   const accessKey = process.env[ENV.ACCESS_KEY]
@@ -27,33 +27,45 @@ async function run(): Promise<void> {
     const region = envOr(ENV.REGION, DEFAULTS.REGION)
     const type = envOr(ENV.TYPE, DEFAULTS.TYPE)
 
-    if (!pathRegistry) {
-      core.setFailed('SCW_REGISTRY is not set')
-      return
-    }
-
     const client = createClientWrapper()
 
-    if (type === 'deploy') {
-      const result = await deploy(client, region, pathRegistry)
+    if (type === TYPES.DEPLOY) {
+      if (!pathRegistry) {
+        core.setFailed('SCW_REGISTRY is not set')
+        return
+      }
 
-      printOutputs(
-        getContainerDomain(result.container),
-        result.domain?.hostname || result.container.publicEndpoint,
-        result.container.id,
-        result.container.namespaceId,
-      )
-    } else if (type === 'teardown') {
+      const { domain, container } = await deploy(client, region, pathRegistry)
+
+      printOutputs({
+        containerUrl: getContainerDomain(container),
+        url: hostnameToUrl(domain?.hostname) || container.publicEndpoint,
+        containerId: container.id,
+        namespaceId: container.namespaceId,
+      })
+    } else if (type === TYPES.TEARDOWN) {
+      if (!pathRegistry) {
+        core.setFailed('SCW_REGISTRY is not set')
+        return
+      }
+
       const deletedContainer = await teardown(client, region, pathRegistry)
 
-      printOutputs(
-        getContainerDomain(deletedContainer),
-        deletedContainer.publicEndpoint,
-        deletedContainer.id,
-        deletedContainer.namespaceId,
+      printOutputs({
+        containerUrl: getContainerDomain(deletedContainer),
+        url: deletedContainer.publicEndpoint,
+        containerId: deletedContainer.id,
+        namespaceId: deletedContainer.namespaceId,
+      })
+    } else if (type === TYPES.CLEANUP) {
+      const result = await cleanup(client, region)
+
+      core.info(
+        `Cleanup complete: ${result.deletedCount} container(s) ${result.dryRun ? 'would be' : ''} deleted ` +
+          `out of ${result.totalCount} total`,
       )
     } else {
-      core.setFailed(`Unknown type: ${type}. Valid types are: deploy, teardown`)
+      core.setFailed(`Unknown type: ${type}. Valid types are: deploy, teardown, cleanup`)
     }
   } catch (error) {
     core.setFailed(error instanceof Error ? error.message : 'An unknown error occurred')

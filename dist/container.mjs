@@ -1,7 +1,7 @@
 import { info } from "./node_modules/.pnpm/@actions_core@3.0.1/node_modules/@actions/core/lib/core.mjs";
-import { DEFAULTS, ENV } from "./constants.mjs";
 import { index_gen_exports } from "./node_modules/.pnpm/@scaleway_sdk-container@2.12.0_@scaleway_sdk-client@2.6.0/node_modules/@scaleway/sdk-container/dist/v1/index.gen.mjs";
 import "./node_modules/.pnpm/@scaleway_sdk-container@2.12.0_@scaleway_sdk-client@2.6.0/node_modules/@scaleway/sdk-container/dist/index.gen.mjs";
+import { DEFAULTS, ENV } from "./constants.mjs";
 import { envOr, envToInt, parseKeyValue } from "./utils.mjs";
 
 //#region src/container.ts
@@ -49,6 +49,14 @@ async function getContainer(client, region, containerName) {
 	});
 	if (response.containers.length === 0) return null;
 	return response.containers[0];
+}
+async function listContainersByNamespace(client, region) {
+	const namespaceId = process.env[ENV.CONTAINER_NAMESPACE_ID];
+	if (!namespaceId) throw new Error("Namespace ID not found");
+	return await new index_gen_exports.API(client).listContainers({
+		region,
+		namespaceId
+	}).all();
 }
 async function deleteContainer(client, region, container) {
 	return await new index_gen_exports.API(client).deleteContainer({
@@ -150,4 +158,4 @@ async function setCustomDomainContainer(client, container, hostname) {
 }
 
 //#endregion
-export { createContainerAndDeploy, deleteContainer, deployContainer, getContainer, getContainerDomain, getContainerEnvVariables, getContainersNamespace, getSandboxVersion, isContainerAlreadyCreated, setCustomDomainContainer, updateDeployedContainer, waitForContainerReady, waitForNamespaceReady };
+export { createContainerAndDeploy, deleteContainer, deployContainer, getContainer, getContainerDomain, getContainerEnvVariables, getContainersNamespace, getSandboxVersion, isContainerAlreadyCreated, listContainersByNamespace, setCustomDomainContainer, updateDeployedContainer, waitForContainerReady, waitForNamespaceReady };
